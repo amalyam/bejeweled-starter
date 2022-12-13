@@ -31,21 +31,34 @@ const bgColorCodes = {
 } satisfies Record<Color, ColorCode>;
 
 export interface IScreen<Piece extends string> {
+  /** Should be called when the screen is first set up. Initializes event listeners and built-in commands (quit)  */
   initialize(): void;
+  /** Reset the screen and all configurations. */
   reset(): void;
+  /** Print all the commands currently recognized by the screen. */
   printCommands(): void;
+  /** Set the space on the grid identified by the given row/column */
   setGrid(row: number, col: number, char: GridSpace<Piece>): void;
+  /** Add a command to be recognized by the screen */
   addCommand(key: string, description: string, action: () => void): void;
+  /** Set the message to be shown when quitting */
   setQuitMessage(quitMessage: string): void;
+  /** Render the current state of the grid to the screen */
   render(): void;
+  /** Set the color of the text at the given row/column */
   setTextColor(row: number, col: number, color: Color): void;
+  /** Set the background color of the text at the given row/column */
   setBackgroundColor(row: number, col: number, color: Color): void;
+  /** Set the message to be displayed on screen with every rerender */
   setMessage(msg: string): void;
 }
 
+/**
+ * The screen class exposes an API to create grid-based text UIs.
+ */
 export default class Screen<Piece extends string> implements IScreen<Piece> {
-  static defaultTextColor = colorCodes.white;
-  static defaultBackgroundColor = bgColorCodes.black;
+  private static defaultTextColor = colorCodes.white;
+  private static defaultBackgroundColor = bgColorCodes.black;
 
   public grid: GridSpace<Piece>[][] = [];
 
