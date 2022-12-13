@@ -13,6 +13,7 @@ class Bejeweled {
   }
 
   run() {
+    this.screen.initialize();
     this.cursor.setBackgroundColor();
     // unnecessary because setBackgroundColor already calls this, but here for clarity
     this.screen.render();

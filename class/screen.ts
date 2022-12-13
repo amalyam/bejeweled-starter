@@ -31,13 +31,12 @@ const bgColorCodes = {
 } satisfies Record<Color, ColorCode>;
 
 export interface IScreen<Piece extends string> {
+  initialize(): void;
   reset(): void;
   printCommands(): void;
-  waitForInput(): void;
   setGrid(row: number, col: number, char: GridSpace<Piece>): void;
   addCommand(key: string, description: string, action: () => void): void;
   setQuitMessage(quitMessage: string): void;
-  quit(showMessage?: boolean): void;
   render(): void;
   setTextColor(row: number, col: number, color: Color): void;
   setBackgroundColor(row: number, col: number, color: Color): void;
@@ -74,6 +73,7 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
     this.gridLines = gridLines;
     this.reset();
   }
+
   reset() {
     this.grid = [];
     this.textColors = [];
@@ -90,12 +90,17 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
     }
 
     this.setQuitMessage("\nThank you for playing! \nGoodbye.\n");
+  }
+
+  initialize() {
+    if (this.initialized) return;
+
+    this.waitForInput();
+
     const quitCmd = new Command("q", "quit the game", this.quit);
     this.commands["q"] = quitCmd;
 
     this.initialized = true;
-
-    this.waitForInput();
   }
 
   printCommands() {
@@ -109,29 +114,7 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
     console.log("");
   }
 
-  waitForInput() {
-    keypress(process.stdin);
-
-    process.stdin.on("keypress", (ch, key) => {
-      if (!key) {
-        console.log("Warning: Unknown keypress");
-      } else if (!this.commands.hasOwnProperty(key.name)) {
-        this.render();
-        console.log(`${key.name} not supported.`);
-        this.printCommands();
-      } else {
-        this.render();
-        this.commands[key.name].execute();
-      }
-    });
-
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-  }
-
   setGrid(row: number, col: number, char: GridSpace<Piece>) {
-    if (!this.initialized) return;
-
     if (char.length !== 1) {
       throw new Error("invalid grid character");
     }
@@ -148,11 +131,6 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
 
   setQuitMessage(quitMessage: string) {
     this.quitMessage = quitMessage;
-  }
-
-  quit(showMessage = true) {
-    if (showMessage) console.log(this.quitMessage);
-    process.exit(1);
   }
 
   render() {
@@ -238,5 +216,30 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
 
   setMessage(msg: string) {
     this.message = msg;
+  }
+
+  private quit(showMessage = true) {
+    if (showMessage) console.log(this.quitMessage);
+    process.exit(1);
+  }
+
+  private waitForInput() {
+    keypress(process.stdin);
+
+    process.stdin.on("keypress", (ch, key) => {
+      if (!key) {
+        console.log("Warning: Unknown keypress");
+      } else if (!this.commands.hasOwnProperty(key.name)) {
+        this.render();
+        console.log(`${key.name} not supported.`);
+        this.printCommands();
+      } else {
+        this.render();
+        this.commands[key.name].execute();
+      }
+    });
+
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
   }
 }

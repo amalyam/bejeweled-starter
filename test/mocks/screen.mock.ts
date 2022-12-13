@@ -11,13 +11,12 @@ type ColorName =
   | "white";
 
 export default class Screen implements IScreen<string> {
+  initialize(): void {}
   reset(): void {}
   printCommands(): void {}
-  waitForInput(): void {}
   setGrid(row: number, col: number, char: string): void {}
   addCommand(key: string, description: string, action: () => void): void {}
   setQuitMessage(quitMessage: string): void {}
-  quit(showMessage?: boolean | undefined): void {}
   render(): void {}
   setTextColor(row: number, col: number, color: ColorName): void {}
   setBackgroundColor(row: number, col: number, color: ColorName): void {}
