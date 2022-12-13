@@ -30,28 +30,43 @@ const bgColorCodes = {
   magenta: "\x1b[45m",
 } satisfies Record<Color, ColorCode>;
 
-export default class Screen<Piece extends string> {
+export interface IScreen<Piece extends string> {
+  reset(): void;
+  printCommands(): void;
+  waitForInput(): void;
+  setGrid(row: number, col: number, char: GridSpace<Piece>): void;
+  addCommand(key: string, description: string, action: () => void): void;
+  setQuitMessage(quitMessage: string): void;
+  quit(showMessage?: boolean): void;
+  render(): void;
+  setTextColor(row: number, col: number, color: Color): void;
+  setBackgroundColor(row: number, col: number, color: Color): void;
+  setMessage(msg: string): void;
+}
+
+export default class Screen<Piece extends string> implements IScreen<Piece> {
   static defaultTextColor = colorCodes.white;
   static defaultBackgroundColor = bgColorCodes.black;
 
-  numCols = 0;
-  numRows = 0;
-  grid: GridSpace<Piece>[][] = [];
+  public grid: GridSpace<Piece>[][] = [];
 
-  borderChar = " ";
-  spacerCount = 1;
+  private numCols = 0;
+  private numRows = 0;
 
-  gridLines = false;
+  private borderChar = " ";
+  private spacerCount = 1;
 
-  textColors: ColorCode[][] = [];
-  backgroundColors: ColorCode[][] = [];
+  private gridLines = false;
 
-  commands: Record<string, Command> = {};
+  private textColors: ColorCode[][] = [];
+  private backgroundColors: ColorCode[][] = [];
 
-  initialized = false;
+  private commands: Record<string, Command> = {};
 
-  message = "";
-  quitMessage: string = "";
+  private initialized = false;
+
+  private message = "";
+  private quitMessage: string = "";
 
   constructor(numRows: number, numCols: number, gridLines: boolean) {
     this.numRows = numRows;

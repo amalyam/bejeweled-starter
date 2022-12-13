@@ -1,6 +1,6 @@
-import Screen, { Color, GridSpace } from "./screen";
+import { Color, GridSpace, IScreen } from "./screen";
 
-export default class Cursor<Player extends string> {
+export default class Cursor<GamePiece extends string> {
   public row = 0;
   public col = 0;
 
@@ -11,7 +11,7 @@ export default class Cursor<Player extends string> {
   constructor(
     public numRows: number,
     public numCols: number,
-    public screen: Screen<Player>
+    public screen: IScreen<GamePiece>
   ) {}
 
   //Use setBackgroundColor and resetBackgroundColor in cursor.js
@@ -71,7 +71,7 @@ export default class Cursor<Player extends string> {
     this.setBackgroundColor();
   }
 
-  return(playerTurn: GridSpace<Player>) {
+  return(playerTurn: GridSpace<GamePiece>) {
     this.resetBackgroundColor();
     this.setTextColor();
     this.screen.setGrid(this.row, this.col, playerTurn);

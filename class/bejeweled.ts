@@ -1,7 +1,7 @@
 import Screen from "./screen";
 import Cursor from "./cursor";
 
-type GamePiece = string; // make this more specific
+export type GamePiece = string; // make this more specific
 
 class Bejeweled {
   public screen = new Screen<GamePiece>(8, 8, false);
