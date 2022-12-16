@@ -34,7 +34,7 @@ Swapping the middle `🍊` with the `🍇` below it will match three `🍇` in a
 
 ```
  🥝 🍓 🥥
-         
+
  🥝 🍊 🍊
 ```
 
@@ -61,17 +61,18 @@ There are no more matches, so the player can take their next turn.
 ## Running the game
 
 1. Type `npm install` to install all packages
-2. Run `node game.js` to run the game
-3. Run `mocha` to run tests
+2. Run `npm run build` to compile the typescript (or `npm run build:watch` to also watch for changes)
+3. Run `npm start` to run the game
+4. Run `mocha` to run tests
 
 ## Tasks
 
 1. Implement tests in `test/bejeweled-spec.js` matching the bejeweled game logic
 2. Update tests in `test/cursor-spec.js` to handle selecting and swapping gems
 3. Fill out game logic in `class/bejeweled.js` until `mocha
-   test/bejeweled-spec.js` passes all tests
+test/bejeweled-spec.js` passes all tests
 4. Update cursor logic in `class/cursor.js` until `mocha
-   test/cursor-spec.js` passes all tests
+test/cursor-spec.js` passes all tests
 5. Use `setBackgroundColor` and `resetBackgroundColor` in `cursor.js` to
    highlight the cursor's current position on the grid, with a visual
    signifier when the cursor is in a "swap" state
@@ -79,63 +80,3 @@ There are no more matches, so the player can take their next turn.
 7. Fill out the game state in `bejeweled.js` that checks for match-3s.
 8. Chain the game state to check and alert the player for match combos.
 9. Implement a score for the player based on matches and combos.
-
-## Screen API
-
-`Screen` is a static class with the following methods. You do not need to
-modify this class at all. The functionality you will need is documented below.
-
-### Initialize
-
-* `Screen.initialize(numRows, numCols)` will initialize a grid with the given
-  dimensions.
-
-### Initialize
-
-* `Screen.setGridlines(gridLines)` will insert lines between each grid element
-  is `gridLines` is true, or hide them if `gridLines` is false.
-
-### Commands
-
-* `Screen.addCommand(key, description, action)` will add a command that calls
-  the `action` callback anytime `key` is typed on the keyboard. `description`
-  will be displayed in the help message.
-* `Screen.printCommands()` will show a list of all loaded commands and their
-  descriptions.
-
-### Updating the grid
-
-* `Screen.setGrid(row, col, char)` sets the character at `row` and `col` to
-  the given `char`.
-* `Screen.setTextColor(row, col, color)` sets the text color at `row` and
-  `col` to the given `color`.
-* `Screen.setBackgroundColor(row, col, color)` sets the background color at
-  `row` and `col` to the given `color`.
-
-Valid colors are:
-  * black
-  * red
-  * green
-  * yellow
-  * blue
-  * cyan
-  * white
-  * magenta
-
-### Quitting
-
-* `Screen.setQuitMessage(quitMessage)` sets a message to be printed when the
-  user quits.
-* `Screen.quit(showMessage=true)` quits the game and prints the message if
-  `showMessage` is true.
-
-### Rendering
-
-* `Screen.render()` will update the display. This must be called anytime the
-  grid or messages change.
-
-### Displaying a message
-
-* `Screen.setMessage(msg)` takes in a string to be printed below the grid each
-  time it is rendered.
-
