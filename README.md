@@ -27,7 +27,9 @@ matched items disappear and new items above it fall to fill the gaps.
 Example:
 
 ```
- 🥝 🍓 🥥 🍇 🍊 🍇 🥝 🍇 🍊
+ 🥝 🍓 🥥
+ 🍇 🍊 🍇
+ 🥝 🍇 🍊
 ```
 
 Swapping the middle `🍊` with the `🍇` below it will match three `🍇` in a row.
@@ -41,19 +43,24 @@ Swapping the middle `🍊` with the `🍇` below it will match three `🍇` in a
 The `🍇`s disappear new items fall in from the top to fill in the blank spots.
 
 ```
- 🥝 🍋 🍊 🥝 🍓 🥥 🥝 🍊 🍊
+ 🥝 🍋 🍊
+ 🥝 🍓 🥥
+ 🥝 🍊 🍊
 ```
 
 In this case, a new `🥝` fell down, triggering a combo.
 
 ```
-    🍋 🍊 🍓 🥥 🍊 🍊
+🍋 🍊 🍓
+🥥 🍊 🍊
 ```
 
 Again, new items fall in to replace the completed `🥝`s.
 
 ```
- 🍓 🍋 🍊 🍇 🍓 🥥 🍋 🍊 🍊
+ 🍓 🍋 🍊
+ 🍇 🍓 🥥
+ 🍋 🍊 🍊
 ```
 
 There are no more matches, so the player can take their next turn.
@@ -80,3 +87,15 @@ test/cursor-spec.js` passes all tests
 7. Fill out the game state in `bejeweled.js` that checks for match-3s.
 8. Chain the game state to check and alert the player for match combos.
 9. Implement a score for the player based on matches and combos.
+
+## Thinking Grid
+
+```
+    🍎 🍋 🍊 🍋 🍒 🍓 🍌
+    🍓 🍌 🥥 🍇 🍊 🥥 🍒
+    🍎 🍊 🥝 🍓 🥥 🍎 🥥
+    🍎 🍒 🍉 🥝 🍊 🍌 🍒
+ 🍓 🍎 🍋 🍊 🍋 🍊 🍓 🍌
+ 🍇 🍓 🍌 🥥 🍇 🥝 🍇 🍒
+ 🍋 🍊 🍊 🥝 🍓 🥥 🍊 🥥
+```

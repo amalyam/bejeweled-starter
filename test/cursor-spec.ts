@@ -1,3 +1,4 @@
+import "source-map-support/register";
 import { expect } from "chai";
 
 import Cursor from "../class/cursor";
@@ -58,4 +59,8 @@ describe("Cursor", function () {
     cursor.left();
     expect([cursor.row, cursor.col]).to.deep.equal([0, 0]);
   });
+
+  it("properly selects a gem", function () {});
+
+  it("swaps gems properly", function () {});
 });

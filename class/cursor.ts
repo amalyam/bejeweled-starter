@@ -44,7 +44,7 @@ export default class Cursor<GamePiece extends string> {
   down() {
     this.resetBackgroundColor();
 
-    if (this.row < 2) {
+    if (this.row < 8) {
       this.row++;
     }
 
@@ -64,12 +64,16 @@ export default class Cursor<GamePiece extends string> {
   right() {
     this.resetBackgroundColor();
 
-    if (this.col < 2) {
+    if (this.col < 8) {
       this.col++;
     }
 
     this.setBackgroundColor();
   }
+
+  select() {}
+
+  swap() {}
 
   return(playerTurn: GridSpace<GamePiece>) {
     this.resetBackgroundColor();
