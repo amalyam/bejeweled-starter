@@ -5,8 +5,8 @@ export default class Cursor<GamePiece extends string> {
   public col = 0;
 
   public gridColor: Color = "black";
-  public cursorColor: Color = "yellow";
-  public textColor: Color = "magenta"; //not working
+  public cursorColor: Color = "cyan";
+  public textColor: Color = "magenta"; //not working?
 
   constructor(
     public numRows: number,

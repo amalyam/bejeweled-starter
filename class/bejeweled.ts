@@ -8,17 +8,18 @@ export type GamePiece = string; // make this more specific
 class Bejeweled {
   public screen = new Screen<GamePiece>(8, 8, false);
   public cursor = new Cursor(8, 8, this.screen);
-  public fruit: string[] = [
-    "🍓",
-    "🥝",
-    "🍊",
-    "🍋",
-    "🍇",
-    "🍉",
-    "🍌",
-    "🍎",
-    "🍒",
-  ];
+  public fruit: string[] = ["🍓", "🥝", "🍊", "🍋", "🥥", "🍉", "🍌", "🍒"];
+  //other fruit "🍎", " 🍇",
+
+  /*
+  Things to do:
+  - fill in select
+  - add leaderboard?
+  - options for timed play vs free play
+  - remove diagonalCheck/remove?
+  - use "pause"/"activate" methods to change 
+    function of arrow key methods when a fruit is selected
+  */
 
   /** Convenience accessor for the screen's grid */
   public get grid() {
@@ -32,10 +33,47 @@ class Bejeweled {
    */
   run() {
     this.screen.initialize();
+
+    this.screen.addCommand(
+      "left",
+      "move cursor left",
+      this.cursor.left.bind(this.cursor)
+    );
+
+    this.screen.addCommand(
+      "right",
+      "move cursor right",
+      this.cursor.right.bind(this.cursor)
+    );
+
+    this.screen.addCommand(
+      "up",
+      "move cursor up",
+      this.cursor.up.bind(this.cursor)
+    );
+
+    this.screen.addCommand(
+      "down",
+      "move cursor down",
+      this.cursor.down.bind(this.cursor)
+    );
+
+    this.screen.addCommand("space", "select a fruit", this.select);
+
     this.cursor.setBackgroundColor();
     /*     // unnecessary because setBackgroundColor already calls this, but here for clarity
     this.screen.render();
  */
+
+    this.loadBoard();
+  }
+
+  select() {
+    //arrow keys move cursor -> border around selected space, or blink cursor?
+    //press spacebar selects/deselects a fruit
+    //if selected, arrow keys swap selected piece with piece in that direction
+    //run checkForMatches -> if returns no matches, swap pieces back
+    //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
   }
 
   checkForMatches() {
@@ -207,6 +245,15 @@ class Bejeweled {
           this.grid[col][newPieces] =
             this.fruit[Math.floor(Math.random() * this.fruit.length)];
         }
+      }
+    }
+  }
+
+  loadBoard() {
+    for (let col = 0; col < this.grid.length; col++) {
+      for (let row = 0; row < this.grid.length; row++) {
+        this.grid[col][row] =
+          this.fruit[Math.floor(Math.random() * this.fruit.length)];
       }
     }
   }
