@@ -10,6 +10,7 @@ class Bejeweled {
   public cursor = new Cursor(8, 8, this.screen);
   public fruit: string[] = ["🍓", "🥝", "🍊", "🍋", "🥥", "🍉", "🍌", "🍒"];
   //other fruit "🍎", " 🍇",
+  public score: number = 0;
 
   /*
   Things to do:
@@ -17,9 +18,7 @@ class Bejeweled {
   - add if statements to arrow keys, some way to identify when a space is selected and arrow function for swapping based on that
   - add leaderboard?
   - options for timed play vs free play
-  - remove diagonalCheck/remove?
-  - use "pause"/"activate" methods to change 
-    function of arrow key methods when a fruit is selected
+  - add constant text for score, controls
   */
 
   /** Convenience accessor for the screen's grid */
@@ -59,7 +58,17 @@ class Bejeweled {
       this.cursor.down.bind(this.cursor)
     );
 
-    this.screen.addCommand("space", "select/deselect a fruit", this.select);
+    this.screen.addCommand(
+      "space",
+      "select/deselect a fruit",
+      this.select.bind(this) //sets context to Bejeweled, binds the select method, otherwise context of 'this' is addCommand()
+    );
+
+    this.screen.addCommand(
+      "return",
+      "confirm swap choice",
+      this.swap.bind(this)
+    );
 
     this.cursor.setBackgroundColor();
     /*     // unnecessary because setBackgroundColor already calls this, but here for clarity
@@ -72,13 +81,40 @@ class Bejeweled {
   select() {
     //press spacebar selects/deselects a fruit.
 
-    //these don't work
-    //this.grid[]
-    //this.screen.setBackgroundColor(this.cursor.row, this.cursor.col, "yellow");
-    //this.cursor.changeCursorColor("yellow");
-    this.cursor.cursorColor = "yellow";
+    if (this.cursor.selected) {
+      this.cursor.selected = false;
+      this.cursor.resetBackgroundColor();
+      this.cursor.cursorColor = this.cursor.originalCurCol;
+      this.cursor.setBackgroundColor();
+    } else {
+      this.cursor.selected = true;
+      this.cursor.resetBackgroundColor();
+      this.cursor.cursorColor = "yellow";
+      this.cursor.setBackgroundColor();
+      // how to keep center the old cursor color, even if the cursor moves over it?
+      this.cursor.center = [this.cursor.col, this.cursor.row];
+    }
+  }
 
+  swap() {
     //if selected, arrow keys swap selected piece with piece in that direction
+    let piece1 = this.grid[this.cursor.center[0]][this.cursor.center[1]];
+    let piece2 = this.grid[this.cursor.row][this.cursor.col];
+    //registering piece below piece1 for right select, piece to the right for down select,
+    //left select is piece above center, up select registers left piece
+
+    if (piece1 !== piece2) {
+      this.grid[this.cursor.center[0]][this.cursor.center[1]] = piece2;
+      this.grid[this.cursor.col][this.cursor.row] = piece1;
+      let result: number | false = this.checkForMatches();
+
+      if (!result) {
+        this.grid[this.cursor.center[0]][this.cursor.center[1]] = piece1;
+        this.grid[this.cursor.col][this.cursor.row] = piece2;
+      } else {
+        this.score = result;
+      }
+    }
     //run checkForMatches -> if returns no matches, swap pieces back
     //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
   }
@@ -86,9 +122,8 @@ class Bejeweled {
   checkForMatches() {
     let horizMatches = this.horizontalCheck();
     let vertMatches = this.verticalCheck();
-    let diagMatches = this.diagonalCheck();
+    //let diagMatches = this.diagonalCheck();
     let matchesNum = 0;
-    let combo: number;
 
     if (horizMatches) {
       matchesNum += horizMatches.length;
@@ -98,13 +133,13 @@ class Bejeweled {
       matchesNum += vertMatches.length;
       this.vertRemove(vertMatches);
     }
-    if (diagMatches) {
-      matchesNum += diagMatches.length;
-      this.diagRemove(diagMatches);
-    }
 
-    if (matchesNum > 1) {
-      //set points for combos -> combo =
+    if (matchesNum >= 1) {
+      //set points for combos
+      return matchesNum * 25;
+    } else {
+      //undo swap
+      return false;
     }
     //add delay timers for some actions so user sees each game state?
     this.piecesFall();
@@ -152,7 +187,9 @@ class Bejeweled {
     return matches;
   }
 
-  diagonalCheck() {
+  /*  
+no diagonal matches in Bejeweled lol
+diagonalCheck() {
     let matches: Match[] = [];
 
     for (let col = 0; col < 8; col++) {
@@ -174,7 +211,7 @@ class Bejeweled {
       }
     }
     return matches;
-  }
+  } */
 
   horizRemove(matchArr: Match[]) {
     //turn each space of a match into an empty space
@@ -206,7 +243,7 @@ class Bejeweled {
     }
   }
 
-  diagRemove(matchArr: Match[]) {
+  /*   diagRemove(matchArr: Match[]) {
     for (let matchNum = 0; matchNum < matchArr.length; matchNum++) {
       for (let row = matchArr[matchNum].row; row < 8; row++) {
         for (
@@ -218,7 +255,7 @@ class Bejeweled {
         }
       }
     }
-  }
+  } */
 
   piecesFall() {
     //if there are pieces above the empty spaces,

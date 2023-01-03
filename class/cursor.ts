@@ -6,7 +6,10 @@ export default class Cursor<GamePiece extends string> {
 
   public gridColor: Color = "black";
   public cursorColor: Color = "cyan";
-  public textColor: Color = "magenta"; //not working?
+  public originalCurCol: Color = this.cursorColor;
+  public textColor: Color = "magenta";
+  public selected: Boolean = false;
+  public center: [number, number] = [0, 0];
 
   constructor(
     public numRows: number,
@@ -34,28 +37,55 @@ export default class Cursor<GamePiece extends string> {
   up() {
     this.resetBackgroundColor();
 
-    if (this.row > 0) {
-      this.row--;
+    if (this.selected) {
+      if (
+        this.row >= this.center[1] &&
+        this.col === this.center[0] &&
+        this.row > 0
+      ) {
+        this.row--;
+      }
+      //this.screen.setBackgroundColor(grid[this.center[0]], this;
+    } else {
+      if (this.row > 0) {
+        this.row--;
+      }
     }
-
     this.setBackgroundColor();
   }
 
   down() {
     this.resetBackgroundColor();
-
-    if (this.row < 8) {
-      this.row++;
+    if (this.selected) {
+      if (
+        this.row <= this.center[1] &&
+        this.col === this.center[0] &&
+        this.row < 7
+      ) {
+        this.row++;
+      }
+    } else {
+      if (this.row < 7) {
+        this.row++;
+      }
     }
-
     this.setBackgroundColor();
   }
 
   left() {
     this.resetBackgroundColor();
-
-    if (this.col > 0) {
-      this.col--;
+    if (this.selected) {
+      if (
+        this.col >= this.center[0] &&
+        this.row === this.center[1] &&
+        this.col > 0
+      ) {
+        this.col--;
+      }
+    } else {
+      if (this.col > 0) {
+        this.col--;
+      }
     }
 
     this.setBackgroundColor();
@@ -63,16 +93,22 @@ export default class Cursor<GamePiece extends string> {
 
   right() {
     this.resetBackgroundColor();
-
-    if (this.col < 8) {
-      this.col++;
+    if (this.selected) {
+      if (
+        this.col <= this.center[0] &&
+        this.row === this.center[1] &&
+        this.col < 7
+      ) {
+        this.col++;
+      }
+    } else {
+      if (this.col < 7) {
+        //issue here? cursor moving beyond right side of grid
+        this.col++;
+      }
     }
 
     this.setBackgroundColor();
-  }
-
-  changeCursorColor(color: Color) {
-    this.cursorColor = color;
   }
 
   return(playerTurn: GridSpace<GamePiece>) {
