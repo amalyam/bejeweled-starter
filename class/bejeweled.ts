@@ -14,11 +14,15 @@ class Bejeweled {
 
   /*
   Things to do:
-  - fill in select
-  - add if statements to arrow keys, some way to identify when a space is selected and arrow function for swapping based on that
+  - fix game hang in piecesFall
+  - make sure remove methods are working properly
+  - fix swap issue: pieces don't swap back properly if swap doesn't result in match
+
+
   - add leaderboard?
   - options for timed play vs free play
   - add constant text for score, controls
+  - check for row,col issues in checkForMatches and helper methods?
   */
 
   /** Convenience accessor for the screen's grid */
@@ -98,22 +102,29 @@ class Bejeweled {
 
   swap() {
     //if selected, arrow keys swap selected piece with piece in that direction
-    let piece1 = this.grid[this.cursor.center[0]][this.cursor.center[1]];
+    //add pause commands
+    let piece1 = this.grid[this.cursor.center[1]][this.cursor.center[0]];
     let piece2 = this.grid[this.cursor.row][this.cursor.col];
-    //registering piece below piece1 for right select, piece to the right for down select,
-    //left select is piece above center, up select registers left piece
 
     if (piece1 !== piece2) {
-      this.grid[this.cursor.center[0]][this.cursor.center[1]] = piece2;
-      this.grid[this.cursor.col][this.cursor.row] = piece1;
+      this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece2;
+      this.screen.render();
+      this.grid[this.cursor.row][this.cursor.col] = piece1;
+      this.screen.render();
+
       let result: number | false = this.checkForMatches();
 
       if (!result) {
-        this.grid[this.cursor.center[0]][this.cursor.center[1]] = piece1;
-        this.grid[this.cursor.col][this.cursor.row] = piece2;
+        this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
+        this.grid[this.cursor.row][this.cursor.col] = piece2;
+        //setTimeout(this.screen.render, 250);
+        //*bug: swap back is only visible after a keypress
       } else {
         this.score = result;
+        this.select();
       }
+
+      //add activate commands
     }
     //run checkForMatches -> if returns no matches, swap pieces back
     //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
@@ -136,28 +147,35 @@ class Bejeweled {
 
     if (matchesNum >= 1) {
       //set points for combos
+      this.piecesFall();
       return matchesNum * 25;
     } else {
       //undo swap
       return false;
     }
     //add delay timers for some actions so user sees each game state?
-    this.piecesFall();
   }
 
   horizontalCheck() {
     let matches: Match[] = [];
     for (let row = 0; row < this.grid.length; row++) {
       this.grid[row].reduce((accumulator, value, col) => {
-        if (accumulator[0] !== value && accumulator.length >= 3) {
+        //catch matches at the end of a row
+        if (accumulator[0] === value && col + 1 === this.grid[row].length) {
+          matches.push({
+            length: accumulator.length + 1,
+            row,
+            col: col - accumulator.length,
+          });
+        } else if (accumulator[0] !== value && accumulator.length >= 3) {
           matches.push({
             length: accumulator.length,
             row,
             col: col - accumulator.length,
           });
         }
-        return value + (accumulator[0] === value ? accumulator : "");
-      }, "");
+        return accumulator[0] === value ? [value].concat(accumulator) : [value];
+      }, [] as string[]); //or put `: string[]` next to accumulator above
     }
 
     return matches;
@@ -167,21 +185,23 @@ class Bejeweled {
     let matches: Match[] = [];
 
     for (let col = 0; col < 8; col++) {
-      let streak = "";
+      let streak: [string] = [""];
       for (let row = 0; row < this.grid.length; row++) {
-        let val = this.grid[col][row];
+        let val = this.grid[row][col];
         if (streak[0] === val) {
           streak.concat(val);
-        } else {
-          if (streak.length >= 3) {
-            matches.push({
-              length: streak.length,
-              row: row - streak.length,
-              col,
-            });
-          }
-          streak = val;
         }
+        if (
+          streak.length >= 3 &&
+          (streak[0] !== val || col + 1 === this.grid[row].length)
+        ) {
+          matches.push({
+            length: streak.length,
+            row: row - streak.length,
+            col,
+          });
+        }
+        streak = [val];
       }
     }
     return matches;
@@ -223,7 +243,7 @@ diagonalCheck() {
           col < matchArr[matchNum].col + matchArr[matchNum].length;
           col++
         ) {
-          this.grid[col][row] = " ";
+          this.grid[row][col] = " ";
         }
       }
     }
@@ -237,7 +257,7 @@ diagonalCheck() {
           row < matchArr[matchNum].row + matchArr[matchNum].length;
           row++
         ) {
-          this.grid[col][row] = " ";
+          this.grid[row][col] = " ";
         }
       }
     }
@@ -268,8 +288,8 @@ diagonalCheck() {
         if (this.grid[col][row] === " ") {
           count++;
         } else if (count > 0) {
-          this.grid[col][row - count] = this.grid[col][row];
-          this.grid[col][row] = " ";
+          this.grid[row - count][col] = this.grid[row][col];
+          this.grid[row][col] = " ";
         }
         if (row === 0) {
           emptySpaces.push({ col, numSpaces: count });
@@ -286,7 +306,7 @@ diagonalCheck() {
       if (emptySpaces[col]) {
         let blanks = emptySpaces[col].numSpaces;
         for (let newPieces = blanks - 1; newPieces >= 0; newPieces++) {
-          this.grid[col][newPieces] =
+          this.grid[newPieces][col] =
             this.fruit[Math.floor(Math.random() * this.fruit.length)];
         }
       }
@@ -296,7 +316,7 @@ diagonalCheck() {
   loadBoard() {
     for (let col = 0; col < this.grid.length; col++) {
       for (let row = 0; row < this.grid.length; row++) {
-        this.grid[col][row] =
+        this.grid[row][col] =
           this.fruit[Math.floor(Math.random() * this.fruit.length)];
       }
     }
