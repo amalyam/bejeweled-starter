@@ -14,6 +14,7 @@ class Bejeweled {
   /*
   Things to do:
   - fill in select
+  - add if statements to arrow keys, some way to identify when a space is selected and arrow function for swapping based on that
   - add leaderboard?
   - options for timed play vs free play
   - remove diagonalCheck/remove?
@@ -58,7 +59,7 @@ class Bejeweled {
       this.cursor.down.bind(this.cursor)
     );
 
-    this.screen.addCommand("space", "select a fruit", this.select);
+    this.screen.addCommand("space", "select/deselect a fruit", this.select);
 
     this.cursor.setBackgroundColor();
     /*     // unnecessary because setBackgroundColor already calls this, but here for clarity
@@ -69,8 +70,14 @@ class Bejeweled {
   }
 
   select() {
-    //arrow keys move cursor -> border around selected space, or blink cursor?
-    //press spacebar selects/deselects a fruit
+    //press spacebar selects/deselects a fruit.
+
+    //these don't work
+    //this.grid[]
+    //this.screen.setBackgroundColor(this.cursor.row, this.cursor.col, "yellow");
+    //this.cursor.changeCursorColor("yellow");
+    this.cursor.cursorColor = "yellow";
+
     //if selected, arrow keys swap selected piece with piece in that direction
     //run checkForMatches -> if returns no matches, swap pieces back
     //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
@@ -256,6 +263,7 @@ class Bejeweled {
           this.fruit[Math.floor(Math.random() * this.fruit.length)];
       }
     }
+    this.screen.render();
   }
 }
 

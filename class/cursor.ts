@@ -71,9 +71,9 @@ export default class Cursor<GamePiece extends string> {
     this.setBackgroundColor();
   }
 
-  select() {}
-
-  swap() {}
+  changeCursorColor(color: Color) {
+    this.cursorColor = color;
+  }
 
   return(playerTurn: GridSpace<GamePiece>) {
     this.resetBackgroundColor();
