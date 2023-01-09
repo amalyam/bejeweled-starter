@@ -21,7 +21,6 @@ export default class Cursor<GamePiece extends string> {
   //to highlight the cursor's current position on the grid
   resetBackgroundColor() {
     this.screen.setBackgroundColor(this.row, this.col, this.gridColor);
-    this.screen.render();
   }
 
   setBackgroundColor() {
@@ -31,7 +30,6 @@ export default class Cursor<GamePiece extends string> {
 
   setTextColor() {
     this.screen.setTextColor(this.row, this.col, this.textColor);
-    this.screen.render();
   }
 
   up() {
