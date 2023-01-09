@@ -279,8 +279,8 @@ export default class Screen<Piece extends string>
         console.log(`${key.name} not supported.`);
         this.printCommands();
       } else {
-        this.render();
         this.commands[key.name].execute();
+        this.render();
       }
     });
 
