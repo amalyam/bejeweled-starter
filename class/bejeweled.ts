@@ -10,7 +10,7 @@ class Bejeweled {
   public cursor = new Cursor(8, 8, this.screen);
   public fruit: string[] = ["🍓", "🥝", "🍊", "🍋", "🥥", "🍉", "🍌", "🍒"];
   //other fruit "🍎", " 🍇",
-  public score: number = 0;
+  public points: number = 0;
 
   /*
   Things to do (in this order):
@@ -19,6 +19,8 @@ class Bejeweled {
   - fix horizontalCheck? (sometimes registering match of 2 at end of row)
   
   - fix swap issue: pieces don't swap back properly if swap doesn't result in match
+  - sometimes doesn't allow a swap
+  - only clearing pieces after first swap match
 
 
   - add leaderboard?
@@ -113,30 +115,27 @@ class Bejeweled {
       this.grid[this.cursor.row][this.cursor.col] = piece1;
       this.screen.render();
 
-      // this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
-      // this.grid[this.cursor.row][this.cursor.col] = piece2;
+      //returns number of matches or false
+      let result: number | false = this.checkForMatches();
+
+      console.log(result);
+
+      if (!result) {
+        this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
+        this.grid[this.cursor.row][this.cursor.col] = piece2;
+        //setTimeout(, 250);
+        //create new function for pieces swap, setTimeout cb to that function, separate out render
+        this.screen.render();
+      } else {
+        this.points = this.score(result);
+        this.select();
+        this.screen.render();
+      }
 
       //add activate commands
-
-      //run checkForMatches -> if returns no matches, swap pieces back
-      //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
     }
-  }
-
-  checkSwap() {
-    this.swap();
-
-    let result: number | false = this.checkForMatches();
-
-    console.log(result);
-
-    if (!result) {
-      //add timer
-      this.swap();
-    } else {
-      this.score = result;
-      this.select();
-    }
+    //run checkForMatches -> if returns no matches, swap pieces back
+    //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
   }
 
   checkForMatches() {
@@ -157,7 +156,7 @@ class Bejeweled {
     if (matchesNum >= 1) {
       //set points for combos
       // setTimeout(this.piecesFall, 4000);
-      return matchesNum * 25;
+      return matchesNum;
     } else {
       //undo swap
       return false;
@@ -248,7 +247,7 @@ diagonalCheck() {
     for (let { length, row, col } of matchArr) {
       //take length, row, col for each obj in matchArr
       for (let offset = 0; offset < length; offset++) {
-        this.grid[row][col + offset] = " ";
+        this.screen.setGrid(row, col + offset, null);
       }
     }
   }
@@ -257,7 +256,7 @@ diagonalCheck() {
     for (let { length, row, col } of matchArr) {
       //take length, row, col for each obj in matchArr
       for (let offset = 0; offset < length; offset++) {
-        this.grid[row + offset][col] = " ";
+        this.screen.setGrid(row, col + offset, null);
       }
     }
   }
@@ -313,6 +312,12 @@ diagonalCheck() {
         }
       }
     }
+  }
+
+  score(matches: number) {
+    //set score based on number of matches, including combo points
+
+    return matches * 25;
   }
 
   loadBoard() {

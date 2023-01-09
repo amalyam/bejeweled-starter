@@ -3,7 +3,9 @@ import Command from "./command";
 const keypress = require("keypress");
 
 type ColorCode = `\x1b[${string}m`;
-export type GridSpace<Piece extends string> = Piece | " ";
+export type GridSpace<Piece extends string, EmptySpace extends string> =
+  | Piece
+  | EmptySpace;
 
 const colorCodes = {
   black: "\x1b[30m",
@@ -30,7 +32,7 @@ const bgColorCodes = {
   magenta: "\x1b[45m",
 } satisfies Record<Color, ColorCode>;
 
-export interface IScreen<Piece extends string> {
+export interface IScreen<Piece extends string, EmptySpace extends string> {
   /** Should be called when the screen is first set up. Initializes event listeners and built-in commands (quit)  */
   initialize(): void;
   /** Reset the screen and all configurations. */
@@ -38,7 +40,7 @@ export interface IScreen<Piece extends string> {
   /** Print all the commands currently recognized by the screen. */
   printCommands(): void;
   /** Set the space on the grid identified by the given row/column */
-  setGrid(row: number, col: number, char: GridSpace<Piece>): void;
+  setGrid(row: number, col: number, char: Piece | null): void;
   /** Add a command to be recognized by the screen */
   addCommand(key: string, description: string, action: () => void): void;
   /** Set the message to be shown when quitting */
@@ -53,20 +55,27 @@ export interface IScreen<Piece extends string> {
   setMessage(msg: string): void;
 }
 
+const ideographicSpace = "\u3000";
+type IdeographicSpace = typeof ideographicSpace;
+
 /**
  * The screen class exposes an API to create grid-based text UIs.
  */
-export default class Screen<Piece extends string> implements IScreen<Piece> {
+export default class Screen<Piece extends string>
+  implements IScreen<Piece, IdeographicSpace>
+{
   private static defaultTextColor = colorCodes.white;
   private static defaultBackgroundColor = bgColorCodes.black;
 
-  public grid: GridSpace<Piece>[][] = [];
+  public grid: GridSpace<Piece, IdeographicSpace>[][] = [];
 
   private numCols = 0;
   private numRows = 0;
 
   private borderChar = " ";
   private spacerCount = 1;
+
+  private emptySpaceChar = ideographicSpace;
 
   private gridLines = false;
 
@@ -93,7 +102,7 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
     this.backgroundColors = [];
 
     for (let row = 0; row < this.numRows; row++) {
-      this.grid.push(new Array(this.numCols).fill(" "));
+      this.grid.push(new Array(this.numCols).fill(this.emptySpaceChar));
       this.textColors.push(
         new Array(this.numCols).fill(Screen.defaultTextColor)
       );
@@ -127,11 +136,15 @@ export default class Screen<Piece extends string> implements IScreen<Piece> {
     console.log("");
   }
 
-  setGrid(row: number, col: number, char: GridSpace<Piece>) {
-    if (char.length !== 1) {
+  setGrid(row: number, col: number, char: Piece | null) {
+    let realChar = (char ?? this.emptySpaceChar) as GridSpace<
+      Piece,
+      IdeographicSpace
+    >;
+    if (realChar.length !== 1) {
       throw new Error("invalid grid character");
     }
-    this.grid[row][col] = char;
+    this.grid[row][col] = realChar;
   }
 
   addCommand(key: string, description: string, action: () => void) {
