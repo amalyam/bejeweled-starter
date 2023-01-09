@@ -10,6 +10,7 @@ export default class Cursor<GamePiece extends string> {
   public textColor: Color = "magenta";
   public selected: Boolean = false;
   public center: [number, number] = [0, 0];
+  public tempCursorColor: Color | undefined;
 
   constructor(
     public numRows: number,
@@ -20,12 +21,16 @@ export default class Cursor<GamePiece extends string> {
   //Use setBackgroundColor and resetBackgroundColor in cursor.js
   //to highlight the cursor's current position on the grid
   resetBackgroundColor() {
+    this.tempCursorColor = undefined;
     this.screen.setBackgroundColor(this.row, this.col, this.gridColor);
   }
 
   setBackgroundColor() {
-    this.screen.setBackgroundColor(this.row, this.col, this.cursorColor);
-    this.screen.render();
+    this.screen.setBackgroundColor(
+      this.row,
+      this.col,
+      this.tempCursorColor ?? this.cursorColor
+    );
   }
 
   setTextColor() {
