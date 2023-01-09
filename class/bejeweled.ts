@@ -14,7 +14,7 @@ class Bejeweled {
 
   /*
   Things to do (in this order):
-  - fix remove methods
+  - combine remove methods with bool for vert or horiz
   - fix piecesFall
   - fix horizontalCheck? (sometimes registering match of 2 at end of row)
   
@@ -113,25 +113,30 @@ class Bejeweled {
       this.grid[this.cursor.row][this.cursor.col] = piece1;
       this.screen.render();
 
-      let result: number | false = this.checkForMatches();
-
-      console.log(result);
-
-      if (!result) {
-        this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
-        this.grid[this.cursor.row][this.cursor.col] = piece2;
-        //setTimeout(, 250);
-        //create new function for pieces swap, setTimeout cb to that function, separate out render
-        this.screen.render();
-      } else {
-        this.score = result;
-        this.select();
-      }
+      // this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
+      // this.grid[this.cursor.row][this.cursor.col] = piece2;
 
       //add activate commands
+
+      //run checkForMatches -> if returns no matches, swap pieces back
+      //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
     }
-    //run checkForMatches -> if returns no matches, swap pieces back
-    //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
+  }
+
+  checkSwap() {
+    this.swap();
+
+    let result: number | false = this.checkForMatches();
+
+    console.log(result);
+
+    if (!result) {
+      //add timer
+      this.swap();
+    } else {
+      this.score = result;
+      this.select();
+    }
   }
 
   checkForMatches() {
