@@ -109,10 +109,4 @@ export default class Cursor<GamePiece extends string> {
 
     this.setBackgroundColor();
   }
-
-  return(playerTurn: GridSpace<GamePiece>) {
-    this.resetBackgroundColor();
-    this.setTextColor();
-    this.screen.setGrid(this.row, this.col, playerTurn);
-  }
 }
