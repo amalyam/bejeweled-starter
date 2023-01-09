@@ -13,9 +13,11 @@ class Bejeweled {
   public score: number = 0;
 
   /*
-  Things to do:
-  - fix game hang in piecesFall
-  - make sure remove methods are working properly
+  Things to do (in this order):
+  - fix remove methods
+  - fix piecesFall
+  - fix horizontalCheck? (sometimes registering match of 2 at end of row)
+  
   - fix swap issue: pieces don't swap back properly if swap doesn't result in match
 
 
@@ -108,17 +110,19 @@ class Bejeweled {
 
     if (piece1 !== piece2) {
       this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece2;
-      this.screen.render();
       this.grid[this.cursor.row][this.cursor.col] = piece1;
       this.screen.render();
 
       let result: number | false = this.checkForMatches();
 
+      console.log(result);
+
       if (!result) {
         this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
         this.grid[this.cursor.row][this.cursor.col] = piece2;
-        //setTimeout(this.screen.render, 250);
-        //*bug: swap back is only visible after a keypress
+        //setTimeout(, 250);
+        //create new function for pieces swap, setTimeout cb to that function, separate out render
+        this.screen.render();
       } else {
         this.score = result;
         this.select();
@@ -147,7 +151,7 @@ class Bejeweled {
 
     if (matchesNum >= 1) {
       //set points for combos
-      this.piecesFall();
+      // setTimeout(this.piecesFall, 4000);
       return matchesNum * 25;
     } else {
       //undo swap
@@ -236,29 +240,19 @@ diagonalCheck() {
   horizRemove(matchArr: Match[]) {
     //turn each space of a match into an empty space
 
-    for (let matchNum = 0; matchNum < matchArr.length; matchNum++) {
-      for (let row = matchArr[matchNum].row; row < 8; row++) {
-        for (
-          let col = matchArr[matchNum].col;
-          col < matchArr[matchNum].col + matchArr[matchNum].length;
-          col++
-        ) {
-          this.grid[row][col] = " ";
-        }
+    for (let { length, row, col } of matchArr) {
+      //take length, row, col for each obj in matchArr
+      for (let offset = 0; offset < length; offset++) {
+        this.grid[row][col + offset] = " ";
       }
     }
   }
 
   vertRemove(matchArr: Match[]) {
-    for (let matchNum = 0; matchNum < matchArr.length; matchNum++) {
-      for (let col = 0; col < 8; col++) {
-        for (
-          let row = matchArr[matchNum].row;
-          row < matchArr[matchNum].row + matchArr[matchNum].length;
-          row++
-        ) {
-          this.grid[row][col] = " ";
-        }
+    for (let { length, row, col } of matchArr) {
+      //take length, row, col for each obj in matchArr
+      for (let offset = 0; offset < length; offset++) {
+        this.grid[row + offset][col] = " ";
       }
     }
   }
@@ -284,15 +278,18 @@ diagonalCheck() {
 
     for (let col = 0; col < 8; col++) {
       let count = 0;
-      for (let row = 8; row >= 0; row++) {
-        if (this.grid[col][row] === " ") {
+      for (let row = 7; row >= 0; row--) {
+        if (this.grid[row][col] === " ") {
           count++;
-        } else if (count > 0) {
-          this.grid[row - count][col] = this.grid[row][col];
-          this.grid[row][col] = " ";
-        }
-        if (row === 0) {
-          emptySpaces.push({ col, numSpaces: count });
+        } else {
+          if (count > 0) {
+            this.grid[row - count][col] = this.grid[row][col]; //move the to the lowest open position in the col
+            this.grid[row][col] = " ";
+          }
+          if (row === 0) {
+            emptySpaces.push({ col, numSpaces: count });
+            count = 0;
+          }
         }
       }
     }
