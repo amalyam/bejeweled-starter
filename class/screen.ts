@@ -73,8 +73,8 @@ export default class Screen<Piece extends string>
 
   public grid: GridSpace<Piece, IdeographicSpace>[][] = [];
 
-  private numCols = 0;
-  private numRows = 0;
+  public numCols = 0;
+  public numRows = 0;
 
   private borderChar = " ";
   private spacerCount = 1;
@@ -123,7 +123,7 @@ export default class Screen<Piece extends string>
 
     this.waitForInput();
 
-    const quitCmd = new Command("q", "quit the game", this.quit);
+    const quitCmd = new Command("q", "quit the game", this.quit.bind(this));
     this.commands["q"] = quitCmd;
 
     this.initialized = true;
@@ -145,6 +145,11 @@ export default class Screen<Piece extends string>
       Piece,
       IdeographicSpace
     >;
+    if (row < 0 || col < 0 || row >= this.numRows || col >= this.numCols) {
+      throw new Error(
+        `trying to set grid out of bounds: (${row}/${this.numRows}, ${col}/${this.numCols}): "${char}"`
+      );
+    }
     const graphemes = [...graphemeSegmenter.segment(realChar)];
     if (graphemes.length !== 1) {
       throw new Error(`invalid grid character ${realChar}`);
@@ -259,7 +264,7 @@ export default class Screen<Piece extends string>
   }
 
   private quit(showMessage = true) {
-    if (showMessage) console.log(this.quitMessage);
+    if (showMessage && this.quitMessage) console.log(this.quitMessage);
     process.exit(1);
   }
 

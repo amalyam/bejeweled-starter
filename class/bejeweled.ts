@@ -22,6 +22,7 @@ class Bejeweled {
   - combine remove methods with bool for vert or horiz
   - fix piecesFall
   - fix horizontalCheck? (sometimes registering match of 2 at end of row)
+      - also make simpler overall
   
   - fix swap issue: pieces don't swap back properly if swap doesn't result in match
   - sometimes doesn't allow a swap
@@ -178,7 +179,7 @@ class Bejeweled {
   }
 
   horizontalCheck() {
-    let matches: Match[] = [];
+    let matches: Match<GamePiece>[] = [];
     for (let row = 0; row < this.screen.grid.length; row++) {
       this.screen.grid[row].reduce((accumulator, value, col) => {
         //catch matches at the end of a row
@@ -187,12 +188,14 @@ class Bejeweled {
           col + 1 === this.screen.grid[row].length
         ) {
           matches.push({
+            character: value,
             length: accumulator.length + 1,
             row,
             col: col - accumulator.length,
           });
         } else if (accumulator[0] !== value && accumulator.length >= 3) {
           matches.push({
+            character: value,
             length: accumulator.length,
             row,
             col: col - accumulator.length,
@@ -206,26 +209,27 @@ class Bejeweled {
   }
 
   verticalCheck() {
-    let matches: Match[] = [];
+    let matches: Match<GamePiece>[] = [];
 
-    for (let col = 0; col < 8; col++) {
-      let streak: [string] = [""];
-      for (let row = 0; row < this.screen.grid.length; row++) {
-        let val = this.screen.grid[row][col];
-        if (streak[0] === val) {
-          streak.concat(val);
+    for (let col = 0; col < this.screen.numCols; col++) {
+      let streak: GamePiece[] = [""];
+      for (let row = 0; row < this.screen.numRows; row++) {
+        let value = this.screen.getGrid(row, col) as GamePiece;
+        if (streak[0] === value) {
+          streak.concat(value);
         }
         if (
           streak.length >= 3 &&
-          (streak[0] !== val || col + 1 === this.screen.grid[row].length)
+          (streak[0] !== value || row + 1 === this.screen.numRows)
         ) {
           matches.push({
+            character: value,
             length: streak.length,
             row: row - streak.length,
             col,
           });
         }
-        streak = [val];
+        streak = [value];
       }
     }
     return matches;
@@ -257,7 +261,7 @@ diagonalCheck() {
     return matches;
   } */
 
-  horizRemove(matchArr: Match[]) {
+  horizRemove(matchArr: Match<GamePiece>[]) {
     //turn each space of a match into an empty space
 
     for (let { length, row, col } of matchArr) {
@@ -268,7 +272,7 @@ diagonalCheck() {
     }
   }
 
-  vertRemove(matchArr: Match[]) {
+  vertRemove(matchArr: Match<GamePiece>[]) {
     for (let { length, row, col } of matchArr) {
       //take length, row, col for each obj in matchArr
       for (let offset = 0; offset < length; offset++) {
@@ -304,15 +308,16 @@ diagonalCheck() {
         } else {
           if (count > 0) {
             this.screen.setGrid(
-              row - count,
+              row + count,
               col,
               this.screen.getGrid(row, col)
             ); //move the to the lowest open position in the col
             this.screen.setGrid(row, col, null);
-          }
-          if (row === 0) {
-            emptySpaces.push({ col, numSpaces: count });
-            count = 0;
+
+            if (row === 0) {
+              emptySpaces.push({ col, numSpaces: count });
+              count = 0;
+            }
           }
         }
       }
