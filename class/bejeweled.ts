@@ -28,7 +28,7 @@ class Bejeweled {
   - sometimes doesn't allow a swap
   - only clearing pieces after first swap match
 
-
+  - remove all matches from starting board before gameplay
   - add leaderboard?
   - options for timed play vs free play
   - add constant text for score, controls
@@ -122,7 +122,6 @@ class Bejeweled {
     if (piece1 !== piece2) {
       this.screen.setGrid(this.cursor.center[1], this.cursor.center[0], piece2);
       this.screen.setGrid(this.cursor.row, this.cursor.col, piece1);
-      this.screen.render();
 
       //returns number of matches or false
       let result: number | false = this.checkForMatches();
@@ -138,11 +137,11 @@ class Bejeweled {
         this.screen.setGrid(this.cursor.row, this.cursor.col, piece2);
         //setTimeout(, 250);
         //create new function for pieces swap, setTimeout cb to that function, separate out render
-        this.screen.render();
+        this.cursor.tempCursorColor = "red";
+        this.cursor.setBackgroundColor();
       } else {
         this.points = this.score(result);
         this.select();
-        this.screen.render();
       }
 
       //add activate commands
@@ -157,11 +156,11 @@ class Bejeweled {
     //let diagMatches = this.diagonalCheck();
     let matchesNum = 0;
 
-    if (horizMatches) {
+    if (horizMatches.length) {
       matchesNum += horizMatches.length;
       this.horizRemove(horizMatches);
     }
-    if (vertMatches) {
+    if (vertMatches.length) {
       matchesNum += vertMatches.length;
       this.vertRemove(vertMatches);
     }
@@ -180,31 +179,30 @@ class Bejeweled {
 
   horizontalCheck() {
     let matches: Match<GamePiece>[] = [];
-    for (let row = 0; row < this.screen.grid.length; row++) {
-      this.screen.grid[row].reduce((accumulator, value, col) => {
-        //catch matches at the end of a row
-        if (
-          accumulator[0] === value &&
-          col + 1 === this.screen.grid[row].length
-        ) {
-          matches.push({
-            character: value,
-            length: accumulator.length + 1,
-            row,
-            col: col - accumulator.length,
-          });
-        } else if (accumulator[0] !== value && accumulator.length >= 3) {
-          matches.push({
-            character: value,
-            length: accumulator.length,
-            row,
-            col: col - accumulator.length,
-          });
-        }
-        return accumulator[0] === value ? [value].concat(accumulator) : [value];
-      }, [] as string[]); //or put `: string[]` next to accumulator above
-    }
 
+    for (let row = 0; row < this.screen.numRows; row++) {
+      let partialMatch: Match<GamePiece> | undefined;
+      for (let col = 0; col < this.screen.numCols; col++) {
+        let value = this.screen.getGrid(row, col) as GamePiece;
+        if (partialMatch?.character === value) {
+          partialMatch.length++;
+        }
+        if (
+          (partialMatch?.length ?? 0) >= 3 &&
+          (partialMatch?.character !== value || col + 1 === this.screen.numCols)
+        ) {
+          matches.push(partialMatch!); //! means it is def not null/undefined
+        }
+        if (partialMatch?.character !== value) {
+          partialMatch = {
+            character: value,
+            length: 1,
+            row,
+            col,
+          };
+        }
+      }
+    }
     return matches;
   }
 
@@ -212,24 +210,26 @@ class Bejeweled {
     let matches: Match<GamePiece>[] = [];
 
     for (let col = 0; col < this.screen.numCols; col++) {
-      let streak: GamePiece[] = [""];
+      let partialMatch: Match<GamePiece> | undefined;
       for (let row = 0; row < this.screen.numRows; row++) {
         let value = this.screen.getGrid(row, col) as GamePiece;
-        if (streak[0] === value) {
-          streak.concat(value);
+        if (partialMatch?.character === value) {
+          partialMatch.length++;
         }
         if (
-          streak.length >= 3 &&
-          (streak[0] !== value || row + 1 === this.screen.numRows)
+          (partialMatch?.length ?? 0) >= 3 &&
+          (partialMatch?.character !== value || row + 1 === this.screen.numRows)
         ) {
-          matches.push({
-            character: value,
-            length: streak.length,
-            row: row - streak.length,
-            col,
-          });
+          matches.push(partialMatch!); //! means it is def not null/undefined
         }
-        streak = [value];
+        if (partialMatch?.character !== value) {
+          partialMatch = {
+            character: value,
+            length: 1,
+            row,
+            col,
+          };
+        }
       }
     }
     return matches;
@@ -276,7 +276,7 @@ diagonalCheck() {
     for (let { length, row, col } of matchArr) {
       //take length, row, col for each obj in matchArr
       for (let offset = 0; offset < length; offset++) {
-        this.screen.setGrid(row, col + offset, null);
+        this.screen.setGrid(row + offset, col, null);
       }
     }
   }
