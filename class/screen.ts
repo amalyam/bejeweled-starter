@@ -58,6 +58,10 @@ export interface IScreen<Piece extends string, EmptySpace extends string> {
 const ideographicSpace = "\u3000";
 type IdeographicSpace = typeof ideographicSpace;
 
+const graphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
 /**
  * The screen class exposes an API to create grid-based text UIs.
  */
@@ -75,7 +79,7 @@ export default class Screen<Piece extends string>
   private borderChar = " ";
   private spacerCount = 1;
 
-  private emptySpaceChar = ideographicSpace;
+  private emptySpaceChar = ideographicSpace as IdeographicSpace;
 
   private gridLines = false;
 
@@ -141,10 +145,20 @@ export default class Screen<Piece extends string>
       Piece,
       IdeographicSpace
     >;
-    if (realChar.length !== 1) {
-      throw new Error("invalid grid character");
+    const graphemes = [...graphemeSegmenter.segment(realChar)];
+    if (graphemes.length !== 1) {
+      throw new Error(`invalid grid character ${realChar}`);
     }
     this.grid[row][col] = realChar;
+  }
+
+  getGrid(row: number, col: number): Piece | null {
+    let gridSpace = this.grid[row][col];
+
+    if (gridSpace === this.emptySpaceChar) {
+      return null;
+    }
+    return gridSpace;
   }
 
   addCommand(key: string, description: string, action: () => void) {

@@ -2,8 +2,13 @@ import Screen from "./screen";
 import Cursor from "./cursor";
 import Match from "./interface_matches";
 import EmptySpaces from "./interface_emptyspaces";
+import { parseSampleData } from "./parse-sample-data";
 
 export type GamePiece = string; // make this more specific
+
+interface RunOptions {
+  useSampleData?: boolean;
+}
 
 class Bejeweled {
   public screen = new Screen<GamePiece>(8, 8, false);
@@ -39,7 +44,7 @@ class Bejeweled {
    *  - initializing the Screen
    *  - setting up game logic
    */
-  run() {
+  run({ useSampleData = false }: RunOptions = {}) {
     this.screen.initialize();
 
     this.screen.addCommand(
@@ -83,7 +88,7 @@ class Bejeweled {
     this.screen.render();
  */
 
-    this.loadBoard();
+    this.loadBoard(useSampleData);
   }
 
   select() {
@@ -107,12 +112,15 @@ class Bejeweled {
   swap() {
     //if selected, arrow keys swap selected piece with piece in that direction
     //add pause commands
-    let piece1 = this.grid[this.cursor.center[1]][this.cursor.center[0]];
-    let piece2 = this.grid[this.cursor.row][this.cursor.col];
+    let piece1 = this.screen.getGrid(
+      this.cursor.center[1],
+      this.cursor.center[0]
+    );
+    let piece2 = this.screen.getGrid(this.cursor.row, this.cursor.col);
 
     if (piece1 !== piece2) {
-      this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece2;
-      this.grid[this.cursor.row][this.cursor.col] = piece1;
+      this.screen.setGrid(this.cursor.center[1], this.cursor.center[0], piece2);
+      this.screen.setGrid(this.cursor.row, this.cursor.col, piece1);
       this.screen.render();
 
       //returns number of matches or false
@@ -121,8 +129,12 @@ class Bejeweled {
       console.log(result);
 
       if (!result) {
-        this.grid[this.cursor.center[1]][this.cursor.center[0]] = piece1;
-        this.grid[this.cursor.row][this.cursor.col] = piece2;
+        this.screen.setGrid(
+          this.cursor.center[1],
+          this.cursor.center[0],
+          piece1
+        );
+        this.screen.setGrid(this.cursor.row, this.cursor.col, piece2);
         //setTimeout(, 250);
         //create new function for pieces swap, setTimeout cb to that function, separate out render
         this.screen.render();
@@ -156,6 +168,7 @@ class Bejeweled {
     if (matchesNum >= 1) {
       //set points for combos
       // setTimeout(this.piecesFall, 4000);
+      this.piecesFall();
       return matchesNum;
     } else {
       //undo swap
@@ -166,10 +179,13 @@ class Bejeweled {
 
   horizontalCheck() {
     let matches: Match[] = [];
-    for (let row = 0; row < this.grid.length; row++) {
-      this.grid[row].reduce((accumulator, value, col) => {
+    for (let row = 0; row < this.screen.grid.length; row++) {
+      this.screen.grid[row].reduce((accumulator, value, col) => {
         //catch matches at the end of a row
-        if (accumulator[0] === value && col + 1 === this.grid[row].length) {
+        if (
+          accumulator[0] === value &&
+          col + 1 === this.screen.grid[row].length
+        ) {
           matches.push({
             length: accumulator.length + 1,
             row,
@@ -194,14 +210,14 @@ class Bejeweled {
 
     for (let col = 0; col < 8; col++) {
       let streak: [string] = [""];
-      for (let row = 0; row < this.grid.length; row++) {
-        let val = this.grid[row][col];
+      for (let row = 0; row < this.screen.grid.length; row++) {
+        let val = this.screen.grid[row][col];
         if (streak[0] === val) {
           streak.concat(val);
         }
         if (
           streak.length >= 3 &&
-          (streak[0] !== val || col + 1 === this.grid[row].length)
+          (streak[0] !== val || col + 1 === this.screen.grid[row].length)
         ) {
           matches.push({
             length: streak.length,
@@ -283,12 +299,16 @@ diagonalCheck() {
     for (let col = 0; col < 8; col++) {
       let count = 0;
       for (let row = 7; row >= 0; row--) {
-        if (this.grid[row][col] === " ") {
+        if (this.screen.getGrid(row, col) === null) {
           count++;
         } else {
           if (count > 0) {
-            this.grid[row - count][col] = this.grid[row][col]; //move the to the lowest open position in the col
-            this.grid[row][col] = " ";
+            this.screen.setGrid(
+              row - count,
+              col,
+              this.screen.getGrid(row, col)
+            ); //move the to the lowest open position in the col
+            this.screen.setGrid(row, col, null);
           }
           if (row === 0) {
             emptySpaces.push({ col, numSpaces: count });
@@ -298,7 +318,7 @@ diagonalCheck() {
       }
     }
 
-    this.newPieces(emptySpaces);
+    //this.newPieces(emptySpaces);
   }
 
   newPieces(emptySpaces: EmptySpaces[]) {
@@ -307,8 +327,11 @@ diagonalCheck() {
       if (emptySpaces[col]) {
         let blanks = emptySpaces[col].numSpaces;
         for (let newPieces = blanks - 1; newPieces >= 0; newPieces++) {
-          this.grid[newPieces][col] =
-            this.fruit[Math.floor(Math.random() * this.fruit.length)];
+          this.screen.setGrid(
+            newPieces,
+            col,
+            this.fruit[Math.floor(Math.random() * this.fruit.length)]
+          );
         }
       }
     }
@@ -320,11 +343,13 @@ diagonalCheck() {
     return matches * 25;
   }
 
-  loadBoard() {
+  loadBoard(useSampleData: boolean) {
+    const sampleGrid = parseSampleData();
     for (let col = 0; col < this.grid.length; col++) {
       for (let row = 0; row < this.grid.length; row++) {
-        this.grid[row][col] =
-          this.fruit[Math.floor(Math.random() * this.fruit.length)];
+        this.grid[row][col] = useSampleData
+          ? sampleGrid[row][col]
+          : this.fruit[Math.floor(Math.random() * this.fruit.length)];
       }
     }
     this.screen.render();

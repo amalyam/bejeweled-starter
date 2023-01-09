@@ -103,7 +103,6 @@ export default class Cursor<GamePiece extends string> {
       }
     } else {
       if (this.col < 7) {
-        //issue here? cursor moving beyond right side of grid
         this.col++;
       }
     }
