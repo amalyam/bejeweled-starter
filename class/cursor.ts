@@ -14,7 +14,7 @@ export default class Cursor<GamePiece extends string> {
   constructor(
     public numRows: number,
     public numCols: number,
-    public screen: IScreen<GamePiece>
+    public screen: IScreen<GamePiece, any>
   ) {}
 
   //Use setBackgroundColor and resetBackgroundColor in cursor.js
