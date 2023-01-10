@@ -8,6 +8,7 @@ interface Match<Piece extends string> {
   length: number;
   row: number;
   col: number;
+  matchType: "horizontal" | "vertical";
 }
 
 export default Match;

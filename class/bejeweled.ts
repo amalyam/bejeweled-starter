@@ -124,11 +124,17 @@ class Bejeweled {
       this.screen.setGrid(this.cursor.row, this.cursor.col, piece1);
 
       //returns number of matches or false
-      let result: number | false = this.checkForMatches();
+      let matches = this.checkForMatches();
 
-      console.log(result);
+      console.log(matches);
 
-      if (!result) {
+      if (matches.length) {
+        this.removePieces(matches);
+        const emptySpaces = this.piecesFall();
+        //this.newPieces(emptySpaces);
+        this.points = this.calculateScore(matches);
+        this.select();
+      } else {
         this.screen.setGrid(
           this.cursor.center[1],
           this.cursor.center[0],
@@ -136,12 +142,8 @@ class Bejeweled {
         );
         this.screen.setGrid(this.cursor.row, this.cursor.col, piece2);
         //setTimeout(, 250);
-        //create new function for pieces swap, setTimeout cb to that function, separate out render
         this.cursor.tempCursorColor = "red";
         this.cursor.setBackgroundColor();
-      } else {
-        this.points = this.score(result);
-        this.select();
       }
 
       //add activate commands
@@ -150,31 +152,27 @@ class Bejeweled {
     //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
   }
 
-  checkForMatches() {
+  checkForMatches(): Match<GamePiece>[] {
     let horizMatches = this.horizontalCheck();
     let vertMatches = this.verticalCheck();
-    //let diagMatches = this.diagonalCheck();
-    let matchesNum = 0;
+
+    return [...horizMatches, ...vertMatches];
+  }
+
+  removePieces(matches: Match<GamePiece>[]) {
+    const horizMatches = matches.filter(
+      (match) => match.matchType === "horizontal"
+    );
+    const vertMatches = matches.filter(
+      (match) => match.matchType === "vertical"
+    );
 
     if (horizMatches.length) {
-      matchesNum += horizMatches.length;
       this.horizRemove(horizMatches);
     }
     if (vertMatches.length) {
-      matchesNum += vertMatches.length;
       this.vertRemove(vertMatches);
     }
-
-    if (matchesNum >= 1) {
-      //set points for combos
-      // setTimeout(this.piecesFall, 4000);
-      this.piecesFall();
-      return matchesNum;
-    } else {
-      //undo swap
-      return false;
-    }
-    //add delay timers for some actions so user sees each game state?
   }
 
   horizontalCheck() {
@@ -199,6 +197,7 @@ class Bejeweled {
             length: 1,
             row,
             col,
+            matchType: "horizontal",
           };
         }
       }
@@ -228,38 +227,13 @@ class Bejeweled {
             length: 1,
             row,
             col,
+            matchType: "vertical",
           };
         }
       }
     }
     return matches;
   }
-
-  /*  
-no diagonal matches in Bejeweled lol
-diagonalCheck() {
-    let matches: Match[] = [];
-
-    for (let col = 0; col < 8; col++) {
-      let streak = "";
-      for (let row = 0; row < this.grid.length; row++) {
-        let val = this.grid[col][row];
-        if (streak[0] === val) {
-          streak.concat(val);
-        } else {
-          if (streak.length >= 3) {
-            matches.push({
-              length: streak.length,
-              row: row - streak.length,
-              col: col - streak.length,
-            });
-          }
-          streak = val;
-        }
-      }
-    }
-    return matches;
-  } */
 
   horizRemove(matchArr: Match<GamePiece>[]) {
     //turn each space of a match into an empty space
@@ -280,20 +254,6 @@ diagonalCheck() {
       }
     }
   }
-
-  /*   diagRemove(matchArr: Match[]) {
-    for (let matchNum = 0; matchNum < matchArr.length; matchNum++) {
-      for (let row = matchArr[matchNum].row; row < 8; row++) {
-        for (
-          let col = matchArr[matchNum].col;
-          col < matchArr[matchNum].col + matchArr[matchNum].length;
-          col++
-        ) {
-          this.grid[col][row] = " ";
-        }
-      }
-    }
-  } */
 
   piecesFall() {
     //if there are pieces above the empty spaces,
@@ -323,7 +283,7 @@ diagonalCheck() {
       }
     }
 
-    //this.newPieces(emptySpaces);
+    return emptySpaces;
   }
 
   newPieces(emptySpaces: EmptySpaces[]) {
@@ -342,10 +302,10 @@ diagonalCheck() {
     }
   }
 
-  score(matches: number) {
+  calculateScore(matches: Match<GamePiece>[]) {
     //set score based on number of matches, including combo points
 
-    return matches * 25;
+    return matches.length * 25;
   }
 
   loadBoard(useSampleData: boolean) {
