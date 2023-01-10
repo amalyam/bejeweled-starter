@@ -309,7 +309,7 @@ class Bejeweled {
   }
 
   loadBoard(useSampleData: boolean) {
-    const sampleGrid = parseSampleData();
+    const sampleGrid = useSampleData ? parseSampleData() : [];
     for (let col = 0; col < this.grid.length; col++) {
       for (let row = 0; row < this.grid.length; row++) {
         this.grid[row][col] = useSampleData
