@@ -1,37 +1,23 @@
+import {
+  Color,
+  ColorCode,
+  bgColorCodes,
+  colorCodes,
+  resetColor,
+} from "./resources/colors";
 import Command from "./command";
 import Console from "./console";
+import {
+  graphemeSegmenter,
+  ideographicSpace,
+  IdeographicSpace,
+} from "./resources/typography";
 
 const keypress = require("keypress");
 
-type ColorCode = `\x1b[${string}m`;
 export type GridSpace<Piece extends string, EmptySpace extends string> =
   | Piece
   | EmptySpace;
-
-const colorCodes = {
-  black: "\x1b[30m",
-  red: "\x1b[31m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  blue: "\x1b[34m",
-  magenta: "\x1b[35m",
-  cyan: "\x1b[36m",
-  white: "\x1b[37m",
-} satisfies Record<string, ColorCode>;
-
-export type Color = keyof typeof colorCodes;
-
-const bgColorCodes = {
-  //background color
-  black: "\x1b[40m",
-  red: "\x1b[41m",
-  green: "\x1b[42m",
-  yellow: "\x1b[43m",
-  blue: "\x1b[44m",
-  cyan: "\x1b[46m",
-  white: "\x1b[47m",
-  magenta: "\x1b[45m",
-} satisfies Record<Color, ColorCode>;
 
 export interface IScreen<Piece extends string, EmptySpace extends string> {
   /** Should be called when the screen is first set up. Initializes event listeners and built-in commands (quit)  */
@@ -55,13 +41,6 @@ export interface IScreen<Piece extends string, EmptySpace extends string> {
   /** Set the message to be displayed on screen with every rerender */
   setMessage(msg: string): void;
 }
-
-const ideographicSpace = "\u3000";
-type IdeographicSpace = typeof ideographicSpace;
-
-const graphemeSegmenter = new Intl.Segmenter(undefined, {
-  granularity: "grapheme",
-});
 
 /**
  * The screen class exposes an API to create grid-based text UIs.
@@ -211,12 +190,12 @@ export default class Screen<Piece extends string>
         let backgroundColor = this.backgroundColors[row][col]
           ? this.backgroundColors[row][col]
           : "";
-        if (!(textColor && backgroundColor)) textColor = "\x1b[0m";
+        if (!(textColor && backgroundColor)) textColor = resetColor;
 
         let vertLine = this.gridLines && col > 0 ? "|" : "";
         rowCopy[
           col
-        ] = `${Screen.defaultBackgroundColor}${vertLine}\x1b[0m${textColor}${backgroundColor}${spacer}${rowCopy[col]}${spacer}\x1b[0m`;
+        ] = `${Screen.defaultBackgroundColor}${vertLine}${resetColor}${textColor}${backgroundColor}${spacer}${rowCopy[col]}${spacer}${resetColor}`;
       }
 
       if (this.gridLines && row > 0) {
@@ -224,7 +203,7 @@ export default class Screen<Piece extends string>
         horizontalGridLine.unshift(
           `${this.borderChar}${Screen.defaultBackgroundColor}`
         );
-        horizontalGridLine.push(`\x1b[0m${this.borderChar}`);
+        horizontalGridLine.push(`${resetColor}${this.borderChar}`);
         console.log(horizontalGridLine.join(""));
       }
 
