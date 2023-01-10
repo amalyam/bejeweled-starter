@@ -317,6 +317,7 @@ class Bejeweled {
           : this.fruit[Math.floor(Math.random() * this.fruit.length)];
       }
     }
+    this.screen.debugConsole.logInfo("Initialized grid");
     this.screen.render();
   }
 }

@@ -1,7 +1,10 @@
 import { colorCodes, resetColor } from "./resources/colors";
 import { doubleLineBox } from "./resources/typography";
 
-type Verbosity = "debug" | "info";
+enum Verbosity {
+  debug,
+  info,
+}
 
 class LogLine {
   public time = new Date();
@@ -12,9 +15,9 @@ class LogLine {
     colored = true,
     padded,
   }: { colored?: boolean; padded?: number } = {}) {
-    let str = `${colored ? colorCodes.black : ""}${this.timeString}${
-      colored ? resetColor : ""
-    } | ${this.message}`;
+    let str = `${colored ? colorCodes.black : ""}[${
+      Verbosity[this.verbosity]
+    }] ${this.timeString}${colored ? resetColor : ""} | ${this.message}`;
     if (padded) {
       return str.padEnd(padded + colorCodes.black.length + resetColor.length);
     }
@@ -37,12 +40,12 @@ class ConsoleViewport {
   #horizontalBorder: string;
   #enabled: boolean;
 
-  constructor(text: LogLine[], enabled: boolean) {
+  constructor(text: LogLine[]) {
     this.#text = text;
 
     // TODO: Use segmenter for better visual spacing
     this.#maxChars = Math.max(0, ...text.map((line) => line.length));
-    this.#enabled = enabled && this.#maxChars > 0;
+    this.#enabled = this.#maxChars > 0;
     this.#horizontalBorder = this.#box.horizontal.repeat(this.#maxChars + 2);
   }
 
@@ -82,22 +85,32 @@ class ConsoleViewport {
 }
 
 export default class Console {
+  static getVerbosity(levelString: string | undefined): Verbosity {
+    return (
+      {
+        debug: Verbosity.debug,
+        info: Verbosity.info,
+      }[levelString ?? ""] ?? Verbosity.info
+    );
+  }
+
   #text: LogLine[] = [];
 
-  constructor(private enabled: boolean) {}
+  constructor(private verbosity: Verbosity) {}
 
   #makeLogger =
     (verbosity: Verbosity) =>
     (...args: any[]) => {
+      if (verbosity < this.verbosity) return;
       this.#text.push(
         new LogLine(args.map((arg) => String(arg)).join(" "), verbosity)
       );
     };
 
-  info = this.#makeLogger("info");
-  debug = this.#makeLogger("debug");
+  logInfo = this.#makeLogger(Verbosity.info);
+  logDebug = this.#makeLogger(Verbosity.debug);
 
   getViewport(numberOfLines: number) {
-    return new ConsoleViewport(this.#text.slice(-numberOfLines), this.enabled);
+    return new ConsoleViewport(this.#text.slice(-numberOfLines));
   }
 }

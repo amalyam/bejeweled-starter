@@ -74,7 +74,7 @@ export default class Screen<Piece extends string>
   private quitMessage: string = "";
 
   public debugConsole: Console = new Console(
-    !!(process.env.ENABLE_CONSOLE ?? true)
+    Console.getVerbosity(process.env.CONSOLE_VERBOSITY)
   );
 
   constructor(numRows: number, numCols: number, gridLines: boolean) {
@@ -261,7 +261,7 @@ export default class Screen<Piece extends string>
     keypress(process.stdin);
 
     process.stdin.on("keypress", (ch, key) => {
-      this.debugConsole.info(`pressed ${key.name}`);
+      this.debugConsole.logDebug(`pressed ${key.name}`);
       if (!key) {
         console.log("Warning: Unknown keypress");
       } else if (!this.commands.hasOwnProperty(key.name)) {
