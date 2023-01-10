@@ -1,4 +1,5 @@
 import Command from "./command";
+import Console from "./console";
 
 const keypress = require("keypress");
 
@@ -93,6 +94,10 @@ export default class Screen<Piece extends string>
   private message = "";
   private quitMessage: string = "";
 
+  public debugConsole: Console = new Console(
+    !!(process.env.ENABLE_CONSOLE ?? true)
+  );
+
   constructor(numRows: number, numCols: number, gridLines: boolean) {
     this.numRows = numRows;
     this.numCols = numCols;
@@ -182,16 +187,19 @@ export default class Screen<Piece extends string>
     if (!this.initialized) return;
 
     const spacer = new Array(this.spacerCount).fill(" ").join("");
+    const debugConsoleViewport = this.debugConsole.getViewport(this.numRows);
 
     console.clear();
 
-    let borderLength = this.numCols * (this.spacerCount * 2 + 1) + 2;
-    if (this.gridLines) borderLength += this.numCols - 1;
-    let horizontalBorder = new Array(borderLength)
-      .fill(this.borderChar)
-      .join("");
+    let horizontalBorder = `${this.borderChar}${new Array(this.numCols)
+      .fill(
+        `${this.gridLines ? this.borderChar : ""}${spacer}${
+          this.emptySpaceChar
+        }${spacer}`
+      )
+      .join("")}${this.borderChar}`;
 
-    console.log(horizontalBorder);
+    console.log(`${horizontalBorder}\t${debugConsoleViewport.getTopBorder()}`);
 
     for (let row = 0; row < this.numRows; row++) {
       const rowCopy: string[] = [...this.grid[row]];
@@ -225,10 +233,12 @@ export default class Screen<Piece extends string>
       rowCopy.unshift(`${this.borderChar}`);
       rowCopy.push(`${this.borderChar}`);
 
-      console.log(rowCopy.join(""));
+      console.log(`${rowCopy.join("")}\t${debugConsoleViewport.getLine(row)}`);
     }
 
-    console.log(horizontalBorder);
+    console.log(
+      `${horizontalBorder}\t${debugConsoleViewport.getBottomBorder()}`
+    );
 
     console.log("");
 
@@ -272,6 +282,7 @@ export default class Screen<Piece extends string>
     keypress(process.stdin);
 
     process.stdin.on("keypress", (ch, key) => {
+      this.debugConsole.info(`pressed ${key.name}`);
       if (!key) {
         console.log("Warning: Unknown keypress");
       } else if (!this.commands.hasOwnProperty(key.name)) {
