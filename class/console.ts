@@ -1,45 +1,34 @@
+import { colorCodes, resetColor } from "./resources/colors";
+import { doubleLineBox } from "./resources/typography";
+
 type Verbosity = "debug" | "info";
 
-interface LogLine {
-  time: Date;
-  message: string;
-  verbosity: Verbosity;
+class LogLine {
+  public time = new Date();
+
+  constructor(public message: string, public verbosity: Verbosity) {}
+
+  toString({
+    colored = true,
+    padded,
+  }: { colored?: boolean; padded?: number } = {}) {
+    let str = `${colored ? colorCodes.black : ""}${this.timeString}${
+      colored ? resetColor : ""
+    } | ${this.message}`;
+    if (padded) {
+      return str.padEnd(padded + colorCodes.black.length + resetColor.length);
+    }
+    return str;
+  }
+
+  get length(): number {
+    return this.toString({ colored: false }).length;
+  }
+
+  get timeString() {
+    return this.time.toLocaleString().padEnd(20);
+  }
 }
-
-interface Box {
-  corners: {
-    topLeft: string;
-    topRight: string;
-    bottomLeft: string;
-    bottomRight: string;
-  };
-  vertical: string;
-  horizontal: string;
-
-  beginText: string;
-  endText: string;
-}
-
-const combiningOverline = "\u0305";
-const combiningUnderline = "\u0332";
-
-const doubleLineBox: Box = {
-  corners: {
-    topLeft: "\u2554",
-    topRight: "\u2557",
-    bottomLeft: "\u255A",
-    bottomRight: "\u255D",
-  },
-  vertical: "\u2551",
-  horizontal: "\u2550",
-  beginText: "\u2561",
-  endText: "\u255E",
-};
-
-const boxed = (str: string): string =>
-  [...str]
-    .map((char) => `${char}${combiningOverline}${combiningUnderline}`)
-    .join("");
 
 class ConsoleViewport {
   #box = doubleLineBox;
@@ -52,16 +41,18 @@ class ConsoleViewport {
     this.#text = text;
 
     // TODO: Use segmenter for better visual spacing
-    this.#maxChars = Math.max(0, ...text.map((line) => line.message.length));
+    this.#maxChars = Math.max(0, ...text.map((line) => line.length));
     this.#enabled = enabled && this.#maxChars > 0;
     this.#horizontalBorder = this.#box.horizontal.repeat(this.#maxChars + 2);
   }
 
   getLine(row: number): string {
     if (!this.#enabled) return "";
-    return `${this.#box.vertical} ${(
-      this.#text[this.#text.length - row - 1]?.message ?? ""
-    ).padEnd(this.#maxChars)} ${this.#box.vertical}`;
+    return `${this.#box.vertical} ${
+      this.#text[this.#text.length - row - 1]?.toString({
+        padded: this.#maxChars,
+      }) ?? " ".repeat(this.#maxChars)
+    } ${this.#box.vertical}`;
   }
 
   getTopBorder(): string {
@@ -77,7 +68,7 @@ class ConsoleViewport {
     let padChars = (this.#maxChars - title.length) / 2;
     return `${this.#box.horizontal.repeat(Math.floor(padChars))}${
       this.#box.beginText
-    }${boxed(title)}${this.#box.endText}${this.#box.horizontal.repeat(
+    }${title}${this.#box.endText}${this.#box.horizontal.repeat(
       Math.ceil(padChars)
     )}`;
   }
@@ -98,11 +89,9 @@ export default class Console {
   #makeLogger =
     (verbosity: Verbosity) =>
     (...args: any[]) => {
-      this.#text.push({
-        time: new Date(),
-        message: args.map((arg) => String(arg)).join(" "),
-        verbosity,
-      });
+      this.#text.push(
+        new LogLine(args.map((arg) => String(arg)).join(" "), verbosity)
+      );
     };
 
   info = this.#makeLogger("info");
