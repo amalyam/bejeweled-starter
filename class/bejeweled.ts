@@ -10,6 +10,9 @@ interface RunOptions {
   useSampleData?: boolean;
 }
 
+//tuple type Coordinate = [row: number, column: number];
+//type Coordinate = { row: number; column: number };
+
 class Bejeweled {
   public screen = new Screen<GamePiece>(8, 8, false);
   public cursor = new Cursor(8, 8, this.screen);
@@ -18,21 +21,23 @@ class Bejeweled {
   public points: number = 0;
 
   /*
-  Things to do (in this order):
+  Things to do:
+  - fix newPieces -> doesn't always add newPieces?
   - combine remove methods with bool for vert or horiz
-  - fix piecesFall
-  - fix horizontalCheck? (sometimes registering match of 2 at end of row)
-      - also make simpler overall
   
-  - fix swap issue: pieces don't swap back properly if swap doesn't result in match
-  - sometimes doesn't allow a swap
-  - only clearing pieces after first swap match
+  - fix swap issue: 
+    - pieces don't swap back properly 
+    -> if swap doesn't result in match
+    -> but FIRST must update so that any matches in randomly generated board are removed before gameplay
+      - make check and remove methods more modular to do this
+      - what if a horiz + vert swap have overlap?
 
   - remove all matches from starting board before gameplay
   - add leaderboard?
   - options for timed play vs free play
   - add constant text for score, controls
   - check for row,col issues in checkForMatches and helper methods?
+  - refactor cursor to use screen rows + cols
   */
 
   /** Convenience accessor for the screen's grid */
@@ -47,7 +52,6 @@ class Bejeweled {
    */
   run({ useSampleData = false }: RunOptions = {}) {
     this.screen.initialize();
-
     this.screen.addCommand(
       "left",
       "move cursor left",
@@ -112,44 +116,57 @@ class Bejeweled {
 
   swap() {
     //if selected, arrow keys swap selected piece with piece in that direction
-    //add pause commands
+    //add pause/activate commands?
+
+    //add info log to console with # of matches
+
     let piece1 = this.screen.getGrid(
       this.cursor.center[1],
       this.cursor.center[0]
     );
     let piece2 = this.screen.getGrid(this.cursor.row, this.cursor.col);
 
+    //swap piece1 and piece2 if they are not the same emoji
     if (piece1 !== piece2) {
       this.screen.setGrid(this.cursor.center[1], this.cursor.center[0], piece2);
       this.screen.setGrid(this.cursor.row, this.cursor.col, piece1);
-
-      //returns number of matches or false
-      let matches = this.checkForMatches();
-
-      console.log(matches);
-
-      if (matches.length) {
-        this.removePieces(matches);
-        const emptySpaces = this.piecesFall();
-        //this.newPieces(emptySpaces);
-        this.points = this.calculateScore(matches);
-        this.select();
-      } else {
-        this.screen.setGrid(
-          this.cursor.center[1],
-          this.cursor.center[0],
-          piece1
-        );
-        this.screen.setGrid(this.cursor.row, this.cursor.col, piece2);
-        //setTimeout(, 250);
-        this.cursor.tempCursorColor = "red";
-        this.cursor.setBackgroundColor();
-      }
-
-      //add activate commands
     }
-    //run checkForMatches -> if returns no matches, swap pieces back
-    //else, checkForMatches will remove pieces, check for combos, total points, add new pieces
+
+    // check if the swap resulted in a match
+    let result = this.swapCheck();
+
+    // if the swap did not result in a match
+    if (!result) {
+      //swap pieces back
+      this.screen.setGrid(this.cursor.center[1], this.cursor.center[0], piece1);
+      this.screen.setGrid(this.cursor.row, this.cursor.col, piece2);
+      //setTimeout(, 250);
+      this.cursor.tempCursorColor = "red";
+      this.cursor.setBackgroundColor();
+    }
+  }
+
+  swapCheck(): Match<GamePiece>[] | false {
+    //returns matches or false;
+    let matches = this.checkForMatches();
+
+    /* if there are matches: 
+       - remove pieces
+       - add new pieces
+       - total points
+       - return to normal cursor state
+       */
+    if (matches.length) {
+      this.removePieces(matches);
+      const emptySpaces = this.piecesFall();
+      this.newPieces(emptySpaces);
+      this.points = this.calculateScore(matches);
+      this.select();
+      return matches;
+    } else {
+      // return false to swap() to undo the swap
+      return false;
+    }
   }
 
   checkForMatches(): Match<GamePiece>[] {
@@ -265,21 +282,13 @@ class Bejeweled {
       for (let row = 7; row >= 0; row--) {
         if (this.screen.getGrid(row, col) === null) {
           count++;
-        } else {
-          if (count > 0) {
-            this.screen.setGrid(
-              row + count,
-              col,
-              this.screen.getGrid(row, col)
-            ); //move the to the lowest open position in the col
-            this.screen.setGrid(row, col, null);
-
-            if (row === 0) {
-              emptySpaces.push({ col, numSpaces: count });
-              count = 0;
-            }
-          }
+        } else if (count > 0) {
+          this.screen.setGrid(row + count, col, this.screen.getGrid(row, col)); //move the to the lowest open position in the col
+          this.screen.setGrid(row, col, null);
         }
+      }
+      if (count > 0) {
+        emptySpaces.push({ col, numSpaces: count });
       }
     }
 
@@ -288,16 +297,15 @@ class Bejeweled {
 
   newPieces(emptySpaces: EmptySpaces[]) {
     //randomly generate as many new pieces for each column as it has empty spaces
-    for (let col = 0; col < 8; col++) {
-      if (emptySpaces[col]) {
-        let blanks = emptySpaces[col].numSpaces;
-        for (let newPieces = blanks - 1; newPieces >= 0; newPieces++) {
-          this.screen.setGrid(
-            newPieces,
-            col,
-            this.fruit[Math.floor(Math.random() * this.fruit.length)]
-          );
-        }
+    this.screen.render();
+    for (let coordinates of emptySpaces) {
+      for (let row = coordinates.numSpaces - 1; row >= 0; row--) {
+        this.screen.setGrid(
+          row,
+          coordinates.col,
+          this.fruit[Math.floor(Math.random() * this.fruit.length)]
+        );
+        this.screen.render();
       }
     }
   }

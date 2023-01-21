@@ -1,4 +1,5 @@
-import { Color, GridSpace, IScreen } from "./screen";
+import { IScreen } from "./screen";
+import { Color } from "./resources/colors";
 
 export default class Cursor<GamePiece extends string> {
   public row = 0;
@@ -48,7 +49,6 @@ export default class Cursor<GamePiece extends string> {
       ) {
         this.row--;
       }
-      //this.screen.setBackgroundColor(grid[this.center[0]], this;
     } else {
       if (this.row > 0) {
         this.row--;

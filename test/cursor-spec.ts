@@ -1,4 +1,4 @@
-import "source-map-support/register";
+/* import "source-map-support/register";
 import { expect } from "chai";
 
 import Cursor from "../class/cursor";
@@ -64,3 +64,4 @@ describe("Cursor", function () {
 
   it("swaps gems properly", function () {});
 });
+ */

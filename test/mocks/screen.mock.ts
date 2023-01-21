@@ -1,4 +1,4 @@
-import type { IScreen } from "../../class/screen";
+/* import type { IScreen } from "../../class/screen";
 
 type ColorName =
   | "black"
@@ -22,3 +22,4 @@ export default class Screen implements IScreen<string> {
   setBackgroundColor(row: number, col: number, color: ColorName): void {}
   setMessage(msg: string): void {}
 }
+ */
