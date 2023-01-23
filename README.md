@@ -99,3 +99,6 @@ test/cursor-spec.js` passes all tests
  🍇 🍓 🍌 🥥 🍇 🥝 🍇 🍒
  🍋 🍊 🍊 🥝 🍓 🥥 🍊 🥥
 ```
+
+Run with console debugger and sample data:
+CONSOLE_VERBOSITY=debug SAMPLE_DATA=true npm start

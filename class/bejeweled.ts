@@ -22,22 +22,16 @@ class Bejeweled {
 
   /*
   Things to do:
-  - fix newPieces -> doesn't always add newPieces?
-  - combine remove methods with bool for vert or horiz
-  
-  - fix swap issue: 
-    - pieces don't swap back properly 
-    -> if swap doesn't result in match
-    -> but FIRST must update so that any matches in randomly generated board are removed before gameplay
-      - make check and remove methods more modular to do this
-      - what if a horiz + vert swap have overlap?
+    - remove all matches from starting board before gameplay
+      -> update so that any matches in randomly generated board are removed before gameplay
+        - make check and remove methods more modular to do this
+        - what if a horiz + vert swap have overlap?
 
-  - remove all matches from starting board before gameplay
   - add leaderboard?
   - options for timed play vs free play
   - add constant text for score, controls
-  - check for row,col issues in checkForMatches and helper methods?
-  - refactor cursor to use screen rows + cols
+  - refactor cursor to use screen rows + cols (num?)
+  - refactor coordinates to use Coordinate type
   */
 
   /** Convenience accessor for the screen's grid */
@@ -177,18 +171,17 @@ class Bejeweled {
   }
 
   removePieces(matches: Match<GamePiece>[]) {
-    const horizMatches = matches.filter(
-      (match) => match.matchType === "horizontal"
-    );
-    const vertMatches = matches.filter(
-      (match) => match.matchType === "vertical"
-    );
+    //turn each space of a match into an empty space
 
-    if (horizMatches.length) {
-      this.horizRemove(horizMatches);
-    }
-    if (vertMatches.length) {
-      this.vertRemove(vertMatches);
+    for (let { length, row, col, matchType } of matches) {
+      //take length, row, col for each obj in matchArr
+      for (let offset = 0; offset < length; offset++) {
+        if (matchType === "horizontal") {
+          this.screen.setGrid(row, col + offset, null);
+        } else if (matchType === "vertical") {
+          this.screen.setGrid(row + offset, col, null);
+        }
+      }
     }
   }
 
@@ -250,26 +243,6 @@ class Bejeweled {
       }
     }
     return matches;
-  }
-
-  horizRemove(matchArr: Match<GamePiece>[]) {
-    //turn each space of a match into an empty space
-
-    for (let { length, row, col } of matchArr) {
-      //take length, row, col for each obj in matchArr
-      for (let offset = 0; offset < length; offset++) {
-        this.screen.setGrid(row, col + offset, null);
-      }
-    }
-  }
-
-  vertRemove(matchArr: Match<GamePiece>[]) {
-    for (let { length, row, col } of matchArr) {
-      //take length, row, col for each obj in matchArr
-      for (let offset = 0; offset < length; offset++) {
-        this.screen.setGrid(row + offset, col, null);
-      }
-    }
   }
 
   piecesFall() {
